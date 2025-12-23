@@ -1,0 +1,32 @@
+---
+- name: Manage test file
+  hosts: localhost
+  tasks:
+    - name: Create a text file with initial content
+      shell: echo "test_file_content" > ~/test.txt
+      register: create_file_result
+
+    - name: Verify that the file exists and contains the correct content
+      stat:
+        path: ~/test.txt
+      register: file_stat
+
+    - name: Check the content of the file
+      command: cat ~/test.txt
+      register: file_content
+      when: file_stat.stat.exists
+
+    - name: Fail if the content does not match the expected value
+      fail:
+        msg: "File content does not match expected value!"
+      when: file_content.stdout != "test_file_content"
+
+    - name: Change the content of the file before deletion
+      shell: echo "new_file_content" > ~/test.txt
+      when: file_stat.stat.exists
+
+    - name: Delete the file
+      file:
+        path: ~/test.txt
+        state: absent
+
